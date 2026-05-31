@@ -26,8 +26,8 @@ const DEFAULT_VIEWBOX = { x: 0, y: 0, width: 1600, height: 900 };
 const DEFAULT_SETTINGS = {
   svgPath: "/local/floorplan/floorplan_generated.svg?v=1",
   cssPath: "/local/floorplan/floorplan_generated.css?v=1",
-  offHref: "/local/floorplan/lights_off.png?v=1",
-  onHref: "/local/floorplan/lights_on.png?v=1",
+  offHref: "/local/floorplan/lights_off.png",
+  onHref: "/local/floorplan/lights_on.png",
   imageResourcePrefix: "/local/floorplan",
 };
 
@@ -242,6 +242,10 @@ function parseUrlId(value) {
   const end = text.indexOf(")");
   if (start < 0 || end < 0 || end <= start) return "";
   return text.slice(start + 1, end);
+}
+
+function stripPngCacheSuffix(value) {
+  return String(value || "").replace(/(\.png)\?[^#\s"']*/i, "$1");
 }
 
 function parseViewBox(svgText) {
@@ -665,7 +669,7 @@ function generateSvg({ originalSvg, items, viewBox, settings }) {
     root.insertBefore(baseImage, defs.nextSibling);
   }
   baseImage.setAttribute("id", "base-lights-off");
-  baseImage.setAttribute("href", settings.offHref || DEFAULT_SETTINGS.offHref);
+  baseImage.setAttribute("href", stripPngCacheSuffix(settings.offHref || DEFAULT_SETTINGS.offHref));
   baseImage.setAttribute("x", "0");
   baseImage.setAttribute("y", "0");
   baseImage.setAttribute("width", formatNumber(width));
@@ -689,7 +693,7 @@ function generateSvg({ originalSvg, items, viewBox, settings }) {
   const anchor = baseImage.nextSibling;
   items.filter((item) => item.kind === "light").forEach((item) => {
     root.insertBefore(
-      makeSvgElement(doc, "image", { id: item.base + "_lit", class: "lit-image", href: settings.onHref || DEFAULT_SETTINGS.onHref, x: 0, y: 0, width: formatNumber(width), height: formatNumber(height), preserveAspectRatio: "xMidYMid slice", mask: "url(#" + getMaskId(item) + ")" }),
+      makeSvgElement(doc, "image", { id: item.base + "_lit", class: "lit-image", href: stripPngCacheSuffix(settings.onHref || DEFAULT_SETTINGS.onHref), x: 0, y: 0, width: formatNumber(width), height: formatNumber(height), preserveAspectRatio: "xMidYMid slice", mask: "url(#" + getMaskId(item) + ")" }),
       anchor
     );
   });
