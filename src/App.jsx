@@ -111,10 +111,10 @@ const STARTER_CSS = `svg#floorplan {
 }
 
 .sensor-hitbox {
-  fill: rgba(14, 22, 38, 0.12);
-  stroke: rgba(247, 250, 255, 0.58);
-  stroke-width: 1.1;
-  filter: drop-shadow(0 2px 7px rgba(0, 0, 0, 0.48));
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: rgba(235, 242, 255, 0.20);
+  stroke-width: 0.85;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.48));
 }
 
 .camera-hitbox,
@@ -150,6 +150,14 @@ const STARTER_CSS = `svg#floorplan {
   fill: currentColor;
   stroke: none;
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.62));
+}`;
+
+const EXPORT_OVERRIDE_CSS = `/* Floorplan editor export overrides */
+.sensor-hitbox {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: rgba(235, 242, 255, 0.20);
+  stroke-width: 0.85;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.48));
 }`;
 
 function safeNumber(value, fallback = 0) {
@@ -835,7 +843,9 @@ function yamlFunctions() {
       sensorStyle: function(entity, triggeredValue, idleColor, activeColor) {
         var active = this.isTriggered(entity, triggeredValue);
         var color = active ? (activeColor || '#FACC15') : (idleColor || '#FFFFFF');
-        return 'fill: ' + hexToRgba(color, 0.10) + '; stroke: ' + color + '; stroke-width: 1.8; filter: drop-shadow(0 2px 7px rgba(0,0,0,0.48));';
+        var fillOpacity = active ? 0.095 : 0.04;
+        var strokeOpacity = active ? 0.36 : 0.20;
+        return 'fill: ' + hexToRgba(color, fillOpacity) + '; stroke: ' + hexToRgba(color, strokeOpacity) + '; stroke-width: 0.85; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.48));';
       },
       sensorIconStyle: function(entity, triggeredValue, idleColor, activeColor, showWhenActive) {
         var active = this.isTriggered(entity, triggeredValue);
@@ -989,6 +999,16 @@ function generateYaml({ items, settings }) {
     .join("\n");
 
   return `type: custom:floorplan-card
+card_mod:
+  style: |
+    ha-card {
+      overflow: hidden;
+      border-radius: var(--ha-card-border-radius, 12px);
+      contain: paint;
+    }
+    ha-card > * {
+      overflow: hidden;
+    }
 config:
   image: ${settings.svgPath || DEFAULT_SETTINGS.svgPath}
   stylesheet: ${settings.cssPath || DEFAULT_SETTINGS.cssPath}
@@ -1005,7 +1025,8 @@ function mergeCss(originalCss) {
   const css = String(originalCss || "").trim();
   if (!css) return STARTER_CSS;
   const hasNeeded = css.includes("floorplan-entity-hitbox") && css.includes("lit-image") && css.includes("color-tint");
-  return hasNeeded ? css : css + "\n\n/* Added by the visual floorplan entity editor */\n" + STARTER_CSS;
+  const baseCss = hasNeeded ? css : css + "\n\n/* Added by the visual floorplan entity editor */\n" + STARTER_CSS;
+  return baseCss.includes("Floorplan editor export overrides") ? baseCss : baseCss + "\n\n" + EXPORT_OVERRIDE_CSS;
 }
 
 function readFileAsText(file) {
@@ -1548,7 +1569,7 @@ export default function FloorplanEntityEditor() {
                   const y = item.cy - item.height / 2;
                   const active = Boolean(item.previewActive);
                   const sensorColor = active ? item.sensorActiveColor || "#FACC15" : item.sensorIdleColor || "#FFFFFF";
-                  const tileFill = item.kind === "sensor" ? hexToRgba(sensorColor, selectedNow ? 0.16 : 0.08) : selectedNow ? "rgba(125,190,255,0.30)" : item.kind === "camera" ? "rgba(20,25,40,0.62)" : "rgba(14,22,38,0.56)";
+                  const tileFill = item.kind === "sensor" ? hexToRgba(sensorColor, selectedNow ? 0.28 : 0.08) : selectedNow ? "rgba(125,190,255,0.30)" : item.kind === "camera" ? "rgba(20,25,40,0.62)" : "rgba(14,22,38,0.56)";
                   const textFill = "white";
                   const statusText = item.kind === "sensor" ? (active ? item.sensorActiveText || "Open" : item.sensorIdleText || "Closed") : item.kind === "camera" ? "CAM" : "Ready";
                   const icon = item.kind === "camera" ? "mdi:cctv" : item.kind === "sensor" ? (active ? item.sensorActiveIcon || item.icon || "mdi:access-point" : item.sensorIdleIcon || item.icon || "mdi:access-point") : item.icon || "mdi:help-circle-outline";
