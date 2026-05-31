@@ -1141,6 +1141,13 @@ function NumberInput({ value, onChange, min, max, step = 1 }) {
     if (next !== value) onChange(next);
   }
 
+  function updateDraft(nextDraft) {
+    setDraft(nextDraft);
+    if (nextDraft === "" || nextDraft === "-" || nextDraft === ".") return;
+    const next = Number(nextDraft);
+    if (Number.isFinite(next) && next !== value) onChange(next);
+  }
+
   return (
     <input
       type="number"
@@ -1151,7 +1158,7 @@ function NumberInput({ value, onChange, min, max, step = 1 }) {
       onFocus={() => { focusedRef.current = true; }}
       onBlur={() => { focusedRef.current = false; commit(); }}
       onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
-      onChange={(event) => setDraft(event.target.value)}
+      onChange={(event) => updateDraft(event.target.value)}
       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
     />
   );
