@@ -11,7 +11,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "dependencies": {
     "@mdi/js": "^7.4.47",
     "@vitejs/plugin-react": "^6.0.2",
